@@ -411,6 +411,31 @@
       margin: 20px 0;
     }
 
+    /* ── mode toggle ── */
+    .mode-toggle {
+      display: flex; width: 100%;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 4px; gap: 4px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      flex: 1; padding: 8px 0;
+      border: none; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.4px;
+      background: transparent; color: var(--muted);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #c9687a, #d98090);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(180,90,108,0.28);
+    }
+    .mode-btn:not(.active):hover {
+      background: rgba(160,86,106,0.1);
+      color: var(--rose2);
+    }
+
     /* ── responsive ── */
     @media (max-width: 780px) {
       .main-grid { grid-template-columns: 1fr; }
@@ -460,6 +485,16 @@
 
     <!-- Side Panel -->
     <div class="side-panel">
+
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btnModeLetters" data-mode="letter">
+          &#128290;&nbsp; Letters
+        </button>
+        <button class="mode-btn" id="btnModeWords" data-mode="word">
+          &#9997;&nbsp; Words
+        </button>
+      </div>
 
       <!-- Prediction -->
       <div class="card pred-card" id="predCard">
@@ -708,7 +743,35 @@
     });
     // (second listener — existing clear logic below handles fetch/chips)
 
-    // ── Keyboard shortcuts ────────────────────────────────────
+    // ── Mode Toggle ─────────────────────────────────────────
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    let currentMode = 'letter';
+
+    function applyMode(mode) {
+      currentMode = mode;
+      modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      predType.textContent = mode === 'word' ? 'WORD' : 'LETTER';
+      wordChips.innerHTML = '';
+      tokenHistory = [];
+      lastSentence = '';
+      sentenceText.textContent = '';
+      suggPill.classList.remove('visible');
+    }
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (mode === currentMode) return;
+        fetch('/set_mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode })
+        });
+        applyMode(mode);
+      });
+    });
+
+    // ── Keyboard shortcuts ───────────────────────────────────────
     document.addEventListener('keydown', e => {
       if (e.key === 'Backspace') {
         e.preventDefault();
@@ -722,6 +785,18 @@
         if (suggPill.classList.contains('visible')) {
           fetch('/accept_suggestion', { method: 'POST' });
           suggPill.classList.remove('visible');
+        }
+      } else if (e.key.toLowerCase() === 'l') {
+        // L = switch to letter mode
+        if (currentMode !== 'letter') {
+          fetch('/set_mode', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode:'letter'}) });
+          applyMode('letter');
+        }
+      } else if (e.key.toLowerCase() === 'w') {
+        // W = switch to word mode
+        if (currentMode !== 'word') {
+          fetch('/set_mode', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode:'word'}) });
+          applyMode('word');
         }
       }
     });
