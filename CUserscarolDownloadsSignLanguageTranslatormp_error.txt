@@ -1,0 +1,37 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1774374255.095591   19540 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\__init__.py", line 17, in <module>
+    import mediapipe.tasks.python as tasks
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\tasks\python\__init__.py", line 17, in <module>
+    from . import audio
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\tasks\python\audio\__init__.py", line 18, in <module>
+    import mediapipe.tasks.python.audio.audio_classifier
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\tasks\python\audio\audio_classifier.py", line 26, in <module>
+    from mediapipe.tasks.python.audio.core import base_audio_task_api
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\tasks\python\audio\core\base_audio_task_api.py", line 25, in <module>
+    from mediapipe.tasks.python.core.optional_dependencies import doc_controls
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\mediapipe\tasks\python\core\optional_dependencies.py", line 20, in <module>
+    from tensorflow.tools.docs import doc_controls
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\python\framework\ops.py", line 33, in <module>
+    from tensorflow.core.framework import attr_value_pb2
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\tensorflow\core\framework\attr_value_pb2.py", line 12, in <module>
+    _runtime_version.ValidateProtobufRuntimeVersion(
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\google\protobuf\runtime_version.py", line 100, in ValidateProtobufRuntimeVersion
+    _ReportVersionError(
+  File "C:\Users\carol\AppData\Local\Programs\Python\Python310\lib\site-packages\google\protobuf\runtime_version.py", line 50, in _ReportVersionError
+    raise VersionError(msg)
+google.protobuf.runtime_version.VersionError: Detected incompatible Protobuf Gencode/Runtime versions when loading tensorflow/core/framework/attr_value.proto: gencode 6.31.1 runtime 5.29.6. Runtime version cannot be older than the linked gencode version. See Protobuf version guarantees at https://protobuf.dev/support/cross-version-runtime-guarantee.
