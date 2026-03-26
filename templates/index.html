@@ -329,6 +329,35 @@
       box-shadow: 0 6px 20px rgba(180,90,108,0.36);
     }
 
+    .btn-speak {
+      width: 100%; margin-top: 10px;
+      padding: 11px;
+      background: linear-gradient(135deg, rgba(160,86,106,0.15), rgba(201,104,122,0.08));
+      color: var(--mauve);
+      border: 1px dashed rgba(160,86,106,0.4);
+      border-radius: 14px;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.3px;
+      transition: background 0.2s, border-color 0.2s, transform 0.12s, box-shadow 0.2s;
+    }
+    .btn-speak:hover {
+      background: linear-gradient(135deg, rgba(160,86,106,0.25), rgba(201,104,122,0.15));
+      border-color: var(--rose); color: var(--rose2);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 18px rgba(160,86,106,0.15);
+    }
+    .btn-speak:active { transform: scale(0.96); }
+    .btn-speak.speaking {
+      background: linear-gradient(135deg, #c9687a, #d98090);
+      color: #fff; border: none;
+      box-shadow: 0 3px 14px rgba(180,90,108,0.3);
+      animation: speakPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes speakPulse {
+      0%,100% { box-shadow: 0 3px 14px rgba(180,90,108,0.3); }
+      50%      { box-shadow: 0 3px 22px rgba(180,90,108,0.55); }
+    }
+
     /* ── info card ── */
     .info-card {
       font-size: 0.74rem; color: var(--muted); line-height: 1.9;
@@ -473,6 +502,7 @@
           <button class="btn btn-clear" id="btnClear">⟳  Clear</button>
           <button class="btn btn-back"  id="btnBack">⌫  Backspace</button>
         </div>
+        <button class="btn btn-speak" id="btnSpeak">🔊  Read Aloud</button>
       </div>
 
       <!-- How to use -->
@@ -639,6 +669,44 @@
       fetch('/accept_suggestion', { method: 'POST' });
       suggPill.classList.remove('visible');
     });
+
+    // ── Read Aloud (TTS) ─────────────────────────────────────
+    const btnSpeak = document.getElementById('btnSpeak');
+    let ttsActive = false;
+
+    btnSpeak.addEventListener('click', () => {
+      const text = sentenceText.textContent.trim();
+      if (!text) return;
+
+      if (ttsActive) {
+        // Second click cancels speech
+        speechSynthesis.cancel();
+        return;
+      }
+
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate  = 0.95;
+      utter.pitch = 1.05;
+
+      utter.onstart = () => {
+        ttsActive = true;
+        btnSpeak.textContent = '⏹  Stop Speaking';
+        btnSpeak.classList.add('speaking');
+      };
+      utter.onend = utter.onerror = () => {
+        ttsActive = false;
+        btnSpeak.textContent = '🔊  Read Aloud';
+        btnSpeak.classList.remove('speaking');
+      };
+
+      speechSynthesis.speak(utter);
+    });
+
+    // Stop speech if user clears the sentence
+    document.getElementById('btnClear').addEventListener('click', () => {
+      speechSynthesis.cancel();
+    });
+    // (second listener — existing clear logic below handles fetch/chips)
 
     // ── Keyboard shortcuts ────────────────────────────────────
     document.addEventListener('keydown', e => {
