@@ -3,284 +3,386 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Language Translator</title>
+  <title>Auralis — Sign Language Translator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:         #0d0f1a;
-      --surface:    #141624;
-      --surface2:   #1c1f33;
-      --border:     rgba(255,255,255,0.07);
-      --accent:     #4f8ef7;
-      --accent2:    #3dffa0;
-      --word-clr:   #7eb8ff;
-      --text:       #e8eaf6;
-      --muted:      #6b7280;
-      --danger:     #ff6b6b;
-      --glow-a:     rgba(79,142,247,0.18);
-      --glow-w:     rgba(126,184,255,0.18);
+      /* ── pastel palette ── */
+      --bg:       #f5e6e9;        /* soft blush — page background */
+      --surface:  #ead5d9;        /* cards — a shade darker than bg */
+      --surface2: #dfc8cd;        /* inner wells — even darker */
+      --surface3: #d4b8be;        /* deepest insets */
+      --border:   rgba(180,100,115,0.18);
+      --border2:  rgba(180,100,115,0.32);
+      --rose:     #c9687a;        /* primary accent */
+      --rose2:    #b85a6c;        /* deeper accent */
+      --blush:    #e8a0ac;        /* lighter accent */
+      --mauve:    #a0566a;        /* muted accent */
+      --cream:    #fdf3f5;        /* lightest highlight */
+      --text:     #3d1f27;        /* main text — rich dark rose */
+      --muted:    #9a7078;        /* secondary text */
+      --danger:   #c9687a;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Nunito', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 40px;
+      padding: 28px 16px 56px;
       overflow-x: hidden;
     }
 
-    /* ── animated background ─────────────────────────────── */
+    /* ── subtle texture gradient ─── */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: -1;
       background:
-        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(79,142,247,0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(61,255,160,0.05) 0%, transparent 70%);
+        radial-gradient(ellipse 65% 50% at 10% 5%,  rgba(255,255,255,0.55) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 45% at 90% 90%, rgba(200,130,145,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 45% 40% at 50% 50%, rgba(220,170,180,0.10) 0%, transparent 70%);
       pointer-events: none;
     }
 
-    /* ── header ──────────────────────────────────────────── */
-    header {
-      width: 100%; max-width: 1100px;
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px;
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(circle 350px at 5% 85%,  rgba(255,255,255,0.3) 0%, transparent 70%),
+        radial-gradient(circle 250px at 95% 10%,  rgba(230,160,175,0.12) 0%, transparent 70%);
+      pointer-events: none;
     }
 
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon {
-      width: 42px; height: 42px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; box-shadow: 0 0 20px var(--glow-a);
+    /* ── header ── */
+    header {
+      width: 100%; max-width: 1120px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+      padding: 0 4px;
     }
-    .brand-name { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.3px; }
-    .brand-sub  { font-size: 0.72rem; color: var(--muted); }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    /* SVG hand logo */
+    .brand-icon {
+      width: 50px; height: 50px; border-radius: 15px;
+      background: linear-gradient(135deg, #c9687a 0%, #e8a8b4 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(180,90,108,0.3), 0 1px 4px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .brand-icon svg { width: 30px; height: 30px; }
+
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.85rem; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--rose2);
+    }
+    .brand-sub { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.4px; margin-top: 1px; font-weight: 400; }
 
     .status-pill {
       display: flex; align-items: center; gap: 8px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 99px; padding: 6px 14px;
-      font-size: 0.75rem; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 99px; padding: 7px 16px;
+      font-size: 0.72rem; color: var(--muted);
+      box-shadow: 0 2px 8px rgba(180,100,115,0.1);
     }
     .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--accent2);
-      box-shadow: 0 0 8px var(--accent2);
-      animation: pulse 2s infinite;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--rose);
+      box-shadow: 0 0 8px var(--rose);
+      animation: pulse 2.2s ease-in-out infinite;
     }
     @keyframes pulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
     }
 
-    /* ── main grid ───────────────────────────────────────── */
+    /* ── main grid ── */
     .main-grid {
-      width: 100%; max-width: 1100px;
+      width: 100%; max-width: 1120px;
       display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 20px;
+      grid-template-columns: 1fr 370px;
+      gap: 22px;
       align-items: start;
     }
 
-    /* ── card base ───────────────────────────────────────── */
+    /* ── card base ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
-      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 2px 18px rgba(180,100,115,0.10), 0 1px 4px rgba(0,0,0,0.04);
+      position: relative;
     }
     .card-label {
-      font-size: 0.68rem; text-transform: uppercase;
-      letter-spacing: 1.2px; color: var(--muted);
-      margin-bottom: 12px;
+      font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 1.8px; color: var(--mauve);
+      margin-bottom: 14px; font-weight: 700;
     }
 
-    /* ── video card ──────────────────────────────────────── */
-    .video-card { padding: 0; overflow: hidden; position: relative; }
+    /* ── video card ── */
+    .video-card { padding: 0; overflow: hidden; }
     .video-card img {
       width: 100%; display: block;
-      border-radius: 18px;
+      border-radius: 22px;
     }
     .video-overlay {
       position: absolute; bottom: 0; left: 0; right: 0;
-      height: 60px;
-      background: linear-gradient(to top, rgba(13,15,26,0.9), transparent);
-      border-radius: 0 0 18px 18px;
-      display: flex; align-items: flex-end; padding: 12px 16px;
+      height: 70px;
+      background: linear-gradient(to top, rgba(61,31,39,0.65), transparent);
+      border-radius: 0 0 22px 22px;
+      display: flex; align-items: flex-end; padding: 14px 18px;
+      gap: 8px;
     }
-    .video-overlay span { font-size: 0.75rem; color: var(--muted); }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,240,243,0.22);
+      border: 1px solid rgba(255,220,228,0.45);
+      border-radius: 99px; padding: 4px 12px;
+      font-size: 0.66rem; color: #fde8ec; font-weight: 700;
+      letter-spacing: 0.8px; backdrop-filter: blur(4px);
+    }
+    .live-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #ffc8d0;
+      animation: pulse 1.5s infinite;
+    }
+    .video-overlay-text { font-size: 0.7rem; color: rgba(255,230,235,0.7); }
 
-    /* ── side panel ──────────────────────────────────────── */
-    .side-panel { display: flex; flex-direction: column; gap: 16px; }
+    /* ── side panel ── */
+    .side-panel { display: flex; flex-direction: column; gap: 18px; }
 
-    /* ── prediction card ─────────────────────────────────── */
-    .pred-card { text-align: center; position: relative; overflow: hidden; }
+    /* ── prediction card ── */
+    .pred-card { text-align: center; overflow: hidden; }
     .pred-card::before {
       content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, var(--glow-a), transparent 70%);
-      transition: background 0.4s;
+      background: radial-gradient(ellipse 85% 55% at 50% 0%, rgba(201,104,122,0.09), transparent 70%);
+      transition: background 0.4s; pointer-events: none;
+    }
+    .pred-card::after {
+      content: ''; position: absolute;
+      top: -1px; left: 20%; right: 20%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--rose), transparent);
+      border-radius: 99px;
     }
     .pred-card.word-mode::before {
-      background: radial-gradient(ellipse at 50% 0%, var(--glow-w), transparent 70%);
+      background: radial-gradient(ellipse 85% 55% at 50% 0%, rgba(232,160,172,0.12), transparent 70%);
+    }
+    .pred-card.word-mode::after {
+      background: linear-gradient(90deg, transparent, var(--blush), transparent);
     }
 
     .pred-type {
-      font-size: 0.65rem; text-transform: uppercase;
-      letter-spacing: 1.5px; font-weight: 600;
-      color: var(--accent);
-      transition: color 0.3s;
+      font-size: 0.6rem; text-transform: uppercase;
+      letter-spacing: 2.5px; font-weight: 700;
+      color: var(--mauve); transition: color 0.3s;
+      margin-bottom: 4px; font-family: 'Nunito', sans-serif;
     }
-    .pred-card.word-mode .pred-type { color: var(--word-clr); }
+    .pred-card.word-mode .pred-type { color: var(--rose); }
 
     .pred-letter {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 4rem; font-weight: 600;
-      line-height: 1.1; margin: 6px 0;
-      color: var(--accent2);
-      transition: color 0.3s, transform 0.15s;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem; font-weight: 600; line-height: 1.05;
+      margin: 4px 0 10px;
+      color: var(--rose2);
+      transition: transform 0.15s;
     }
     .pred-card.word-mode .pred-letter {
-      font-size: 2.2rem;
-      color: var(--word-clr);
+      font-size: 2.4rem;
+      color: var(--mauve);
     }
     .pred-letter.pop { transform: scale(1.12); }
 
     /* confidence bar */
-    .conf-wrap { margin: 8px 0 4px; }
-    .conf-label { font-size: 0.68rem; color: var(--muted); margin-bottom: 5px; }
+    .conf-wrap { margin: 6px 0 4px; }
+    .conf-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; font-weight: 500; }
     .conf-track {
       height: 6px; border-radius: 99px;
       background: var(--surface2);
-      position: relative; overflow: hidden;
+      overflow: hidden;
     }
     .conf-fill {
       height: 100%; border-radius: 99px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      background: linear-gradient(90deg, var(--mauve), var(--rose), var(--blush));
       width: 0%; transition: width 0.15s;
     }
 
     /* hold bar */
-    .hold-wrap { margin-top: 6px; }
-    .hold-label { font-size: 0.68rem; color: var(--muted); margin-bottom: 5px; }
+    .hold-wrap { margin-top: 10px; }
+    .hold-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
     .hold-track {
-      height: 8px; border-radius: 99px;
+      height: 9px; border-radius: 99px;
       background: var(--surface2);
-      position: relative; overflow: hidden;
+      overflow: hidden;
+      position: relative;
     }
     .hold-fill {
       height: 100%; border-radius: 99px;
-      background: linear-gradient(90deg, #3dffa0, #00e0ff);
+      background: linear-gradient(90deg, #b85a6c, #e8a0ac);
       width: 0%; transition: width 0.1s;
     }
-    .hold-fill.complete { background: linear-gradient(90deg, #3dffa0, #3dffa0); }
+    .hold-fill.complete {
+      background: linear-gradient(90deg, #c9687a, #edb8c2);
+      box-shadow: 0 0 8px rgba(201,104,122,0.35);
+    }
 
-    /* ── sentence card ───────────────────────────────────── */
-    .sentence-card {}
+    /* ── separator ── */
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* ── sentence card ── */
     .sentence-box {
       min-height: 80px; max-height: 120px;
       overflow-y: auto;
-      font-size: 1.1rem; font-weight: 500;
-      line-height: 1.7;
+      font-size: 1.08rem; font-weight: 500; line-height: 1.8;
       word-break: break-word;
       background: var(--surface2);
-      border-radius: 12px;
-      padding: 12px 14px;
+      border-radius: 14px;
+      padding: 14px 16px;
       color: var(--text);
       border: 1px solid var(--border);
-      position: relative;
+      font-family: 'Cormorant Garamond', serif;
+      letter-spacing: 0.2px;
     }
+    .sentence-box::-webkit-scrollbar { width: 4px; }
+    .sentence-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
     .cursor {
       display: inline-block;
-      width: 2px; height: 1.1em;
-      background: var(--accent2);
+      width: 2px; height: 1em;
+      background: var(--rose);
       vertical-align: middle;
-      animation: blink 1s step-end infinite;
-      margin-left: 2px;
+      animation: blink 1.1s step-end infinite;
+      margin-left: 3px;
+      border-radius: 1px;
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-    /* ── suggestion pill ─────────────────────────────────── */
+    /* ── suggestion pill ── */
     .suggestion-row {
-      margin-top: 10px;
+      margin-top: 12px;
       display: flex; gap: 8px; align-items: center;
-      min-height: 34px;
+      min-height: 36px;
     }
     .suggestion-pill {
       display: none;
-      align-items: center; gap: 6px;
-      background: rgba(79,142,247,0.12);
-      border: 1px solid rgba(79,142,247,0.3);
-      border-radius: 99px; padding: 4px 12px;
-      font-size: 0.78rem; color: var(--accent);
-      cursor: pointer; transition: background 0.2s;
+      align-items: center; gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 99px; padding: 6px 16px;
+      font-size: 0.78rem; color: var(--rose2); font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 2px 10px rgba(180,100,115,0.1);
     }
-    .suggestion-pill:hover { background: rgba(79,142,247,0.22); }
+    .suggestion-pill:hover {
+      background: var(--surface3);
+      border-color: var(--rose);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 18px rgba(180,100,115,0.18);
+    }
+    .suggestion-pill:active { transform: scale(0.97) translateY(0); }
     .suggestion-pill.visible { display: flex; }
-    .suggestion-accept {
-      font-size: 0.65rem; color: var(--muted);
-    }
+    .sugg-icon { font-size: 0.85rem; }
+    .suggestion-accept { font-size: 0.6rem; color: var(--muted); font-weight: 400; }
 
-    /* ── action buttons ──────────────────────────────────── */
+    /* ── action buttons ── */
     .btn-row { display: flex; gap: 10px; margin-top: 14px; }
     .btn {
-      flex: 1; padding: 10px;
-      border: none; border-radius: 12px;
-      font-family: inherit; font-size: 0.82rem; font-weight: 600;
-      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+      flex: 1; padding: 11px 10px;
+      border: none; border-radius: 14px;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.2s;
+      letter-spacing: 0.3px;
     }
-    .btn:active { transform: scale(0.97); }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: scale(0.96); }
+
     .btn-clear {
       background: var(--surface2);
       color: var(--muted);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
     }
-    .btn-clear:hover { color: var(--text); }
-    .btn-back {
-      background: rgba(255,107,107,0.1);
-      color: var(--danger);
-      border: 1px solid rgba(255,107,107,0.25);
-    }
-    .btn-back:hover { background: rgba(255,107,107,0.18); }
+    .btn-clear:hover { color: var(--text); background: var(--surface3); }
 
-    /* ── info card ───────────────────────────────────────── */
-    .info-card { font-size: 0.75rem; color: var(--muted); line-height: 1.8; }
+    .btn-back {
+      background: linear-gradient(135deg, #c9687a, #d98090);
+      color: #fff;
+      border: none;
+      box-shadow: 0 3px 14px rgba(180,90,108,0.28);
+    }
+    .btn-back:hover {
+      background: linear-gradient(135deg, #b85a6c, #c9687a);
+      box-shadow: 0 6px 20px rgba(180,90,108,0.36);
+    }
+
+    /* ── info card ── */
+    .info-card {
+      font-size: 0.74rem; color: var(--muted); line-height: 1.9;
+    }
+    .info-card strong { color: var(--text); font-weight: 700; font-size: 0.82rem; }
     .info-card code {
       font-family: 'JetBrains Mono', monospace;
-      background: var(--surface2); border-radius: 4px;
-      padding: 1px 5px; font-size: 0.7rem; color: var(--accent2);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 1px 7px; font-size: 0.67rem;
+      color: var(--rose2);
     }
+    .info-row {
+      display: flex; align-items: baseline; gap: 8px;
+      padding: 4px 0;
+    }
+    .info-icon { font-size: 0.85rem; flex-shrink: 0; }
 
-    /* ── word history chips ──────────────────────────────── */
+    /* ── word history ── */
     .word-history-wrap {
-      width: 100%; max-width: 1100px;
-      margin-top: 16px;
+      width: 100%; max-width: 1120px;
+      margin-top: 20px;
     }
     .word-history-label {
-      font-size: 0.68rem; text-transform: uppercase;
-      letter-spacing: 1.2px; color: var(--muted);
-      margin-bottom: 8px;
+      font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 1.8px; color: var(--mauve);
+      margin-bottom: 10px; font-weight: 700;
     }
     .word-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 99px; padding: 4px 12px;
-      font-size: 0.75rem; color: var(--text);
-      animation: chipIn 0.3s ease;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 99px; padding: 5px 14px;
+      font-size: 0.72rem; color: var(--muted); font-weight: 500;
+      animation: chipIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
     }
-    .chip.word-chip { border-color: rgba(126,184,255,0.3); color: var(--word-clr); }
+    .chip.word-chip {
+      color: var(--rose2); border-color: rgba(201,104,122,0.35);
+      background: rgba(201,104,122,0.07); font-weight: 600;
+    }
     @keyframes chipIn {
-      from { opacity: 0; transform: scale(0.85) translateY(4px); }
+      from { opacity: 0; transform: scale(0.8) translateY(6px); }
       to   { opacity: 1; transform: none; }
     }
 
-    /* ── responsive ──────────────────────────────────────── */
+    /* ── decorative divider ── */
+    .section-sep {
+      width: 100%; max-width: 1120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border2), transparent);
+      margin: 20px 0;
+    }
+
+    /* ── responsive ── */
     @media (max-width: 780px) {
       .main-grid { grid-template-columns: 1fr; }
     }
@@ -290,10 +392,24 @@
 
   <header>
     <div class="brand">
-      <div class="brand-icon">🤟</div>
-      <div>
-        <div class="brand-name">Sign Language Translator</div>
-        <div class="brand-sub">Letter + Word Gesture Recognition</div>
+      <div class="brand-icon">
+        <!-- Minimalist hand SVG logo -->
+        <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Palm -->
+          <path d="M8 18 C8 22,22 22,22 18 L22 12 C22 10.9,21.1 10,20 10 L19 10 L19 8 C19 6.9,18.1 6,17 6 L17 6 C15.9 6,15 6.9,15 8 L15 10 L13 10 L13 7 C13 5.9,12.1 5,11 5 L11 5 C9.9 5,9 5.9,9 7 L9 10 C8.4 10,8 10.4,8 11 Z"
+                fill="rgba(255,255,255,0.9)"/>
+          <!-- Thumb -->
+          <path d="M8 14 L6 14 C5.4 14,5 14.4,5 15 L5 17 C5 18.1,5.9 19,7 19 L8 19"
+                stroke="rgba(255,255,255,0.85)" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          <!-- Sparkle dots -->
+          <circle cx="24" cy="7" r="1.2" fill="rgba(255,230,235,0.8)"/>
+          <circle cx="26" cy="11" r="0.8" fill="rgba(255,230,235,0.6)"/>
+          <circle cx="22" cy="4" r="0.7" fill="rgba(255,230,235,0.5)"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Auralis</div>
+        <div class="brand-sub">Sign Language Translator</div>
       </div>
     </div>
     <div class="status-pill">
@@ -308,7 +424,8 @@
     <div class="card video-card">
       <img id="videoFeed" src="/video_feed" alt="Webcam stream" />
       <div class="video-overlay">
-        <span>Live webcam feed — MediaPipe hand landmarks</span>
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        <span class="video-overlay-text">MediaPipe hand landmark detection</span>
       </div>
     </div>
 
@@ -321,8 +438,13 @@
         <div class="pred-type" id="predType">LETTER</div>
         <div class="pred-letter" id="predLetter">—</div>
 
+        <div class="card-divider"></div>
+
         <div class="conf-wrap">
-          <div class="conf-label">Confidence: <span id="confPct">0%</span></div>
+          <div class="conf-label">
+            <span>Confidence</span>
+            <span id="confPct">0%</span>
+          </div>
           <div class="conf-track"><div class="conf-fill" id="confFill"></div></div>
         </div>
 
@@ -341,7 +463,7 @@
 
         <div class="suggestion-row">
           <div class="suggestion-pill" id="suggPill">
-            <span>💡</span>
+            <span class="sugg-icon">✨</span>
             <span id="suggWord"></span>
             <span class="suggestion-accept">· click to accept</span>
           </div>
@@ -353,22 +475,26 @@
         </div>
       </div>
 
-      <!-- Key hints -->
+      <!-- How to use -->
       <div class="card info-card">
-        <strong>How to use</strong><br>
-        Hold a gesture steady → the bar fills → letter/word is confirmed.<br><br>
-        <code>A–Z</code> Letter gestures append one character.<br>
-        <code>HELLO</code>, <code>YES</code>, <code>NO</code> … Word gestures insert a full word.<br>
-        Drop hand for ~1s to insert a space.<br>
-        Spell-check suggestion appears after each word — click to accept.
+        <strong>How to use</strong>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:2px;">
+          <div class="info-row"><span class="info-icon">✋</span> Hold a gesture steady — the bar fills and confirms.</div>
+          <div class="info-row"><span class="info-icon">🔤</span> <code>A–Z</code> letter gestures append one character.</div>
+          <div class="info-row"><span class="info-icon">💬</span> <code>HELLO</code>, <code>YES</code>, <code>NO</code> … insert full words.</div>
+          <div class="info-row"><span class="info-icon">🕐</span> Drop hand ~1 s to insert a space.</div>
+          <div class="info-row"><span class="info-icon">✨</span> Suggestion appears after each word — click or press <code>A</code>.</div>
+        </div>
       </div>
 
     </div>
   </div>
 
+  <div class="section-sep"></div>
+
   <!-- Word history -->
   <div class="word-history-wrap">
-    <div class="word-history-label">Detected tokens (this session)</div>
+    <div class="word-history-label">Detected tokens — this session</div>
     <div class="word-chips" id="wordChips"></div>
   </div>
 
@@ -390,21 +516,50 @@
     let lastLetter   = '';
     let tokenHistory = [];
 
-    // ── Poll /state every 80ms ────────────────────────────────────────────────
+    // Suggestion hover-lock & grace period
+    let suggHovered    = false;
+    let suggGraceTimer = null;
+    let suggShouldHide = false;
+
+    suggPill.addEventListener('mouseenter', () => { suggHovered = true; });
+    suggPill.addEventListener('mouseleave', () => {
+      suggHovered = false;
+      if (suggShouldHide) hideSuggestion();
+    });
+
+    function showSuggestion(word) {
+      suggWord.textContent = word;
+      suggPill.classList.add('visible');
+      suggShouldHide = false;
+      clearTimeout(suggGraceTimer);
+      suggGraceTimer = setTimeout(() => {
+        suggGraceTimer = null;
+        if (suggShouldHide) hideSuggestion();
+      }, 1000);
+    }
+
+    function hideSuggestion() {
+      suggPill.classList.remove('visible');
+      suggShouldHide = false;
+    }
+
+    function requestHideSuggestion() {
+      suggShouldHide = true;
+      if (!suggHovered && !suggGraceTimer) hideSuggestion();
+    }
+
+    // ── Poll /state every 80ms ────────────────────────────────
     async function pollState() {
       try {
         const res  = await fetch('/state');
         const data = await res.json();
 
-        // Status
         statusText.textContent = 'Live';
 
-        // Prediction type
         const isWord = data.is_word;
         predCard.classList.toggle('word-mode', isWord);
         predType.textContent = isWord ? 'WORD' : 'LETTER';
 
-        // Letter / word display
         const lbl = data.letter || '—';
         if (lbl !== lastLetter) {
           predLetter.classList.remove('pop');
@@ -415,24 +570,18 @@
         }
         predLetter.textContent = lbl;
 
-        // Confidence
         const pct = Math.round(data.confidence * 100);
         confFill.style.width = pct + '%';
         confPct.textContent  = pct + '%';
 
-        // Hold bar
         const hp = Math.round(data.hold_pct * 100);
         holdFill.style.width = hp + '%';
         holdFill.classList.toggle('complete', hp >= 100);
 
-        // Sentence
         const sentence = data.sentence || '';
         sentenceText.textContent = sentence;
-
-        // Auto-scroll to bottom
         sentenceBox.scrollTop = sentenceBox.scrollHeight;
 
-        // Token history chips — detect newly confirmed tokens
         if (sentence.length > lastSentence.length) {
           const added = sentence.slice(lastSentence.length).trim();
           if (added.length > 0) {
@@ -452,13 +601,13 @@
         }
         lastSentence = sentence;
 
-        // Suggestion
         const sugg = data.suggestion || '';
         if (sugg) {
-          suggWord.textContent = sugg;
-          suggPill.classList.add('visible');
+          showSuggestion(sugg);
         } else {
-          suggPill.classList.remove('visible');
+          clearTimeout(suggGraceTimer);
+          suggGraceTimer = null;
+          requestHideSuggestion();
         }
 
       } catch (e) {
@@ -466,10 +615,15 @@
       }
     }
 
-    setInterval(pollState, 80);
-    pollState();
+    async function startPolling() {
+      while (true) {
+        await pollState();
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+    startPolling();
 
-    // ── Buttons ───────────────────────────────────────────────────────────────
+    // ── Buttons ──────────────────────────────────────────────
     document.getElementById('btnClear').addEventListener('click', () => {
       fetch('/clear', { method: 'POST' });
       wordChips.innerHTML = '';
@@ -486,7 +640,7 @@
       suggPill.classList.remove('visible');
     });
 
-    // ── Keyboard shortcuts ────────────────────────────────────────────────────
+    // ── Keyboard shortcuts ────────────────────────────────────
     document.addEventListener('keydown', e => {
       if (e.key === 'Backspace') {
         e.preventDefault();
