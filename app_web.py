@@ -4,6 +4,7 @@ Run: python app_web.py
 Open: http://localhost:5000
 """
 
+import os
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -22,7 +23,7 @@ try:
 except ImportError:
     SPELL_CHECK_AVAILABLE = False
 
-# ── Load TFLite model (fast, thread-safe) ─────────────────────────────────────
+# ── Load letter TFLite model (fast, thread-safe) ─────────────────────────────
 interpreter = tf.lite.Interpreter(model_path="model/sign_language_model.tflite")
 interpreter.allocate_tensors()
 input_details  = interpreter.get_input_details()
@@ -33,13 +34,48 @@ with open("model/label_encoder.pkl", "rb") as f:
 
 WORD_LABELS = {cls for cls in le.classes_ if len(cls) > 1}  # empty: model is letter-only
 
+# ── Load word TFLite model (optional — only if trained) ──────────────────────
+WORD_MODEL_AVAILABLE = False
+word_interpreter   = None
+word_input_details = None
+word_output_details= None
+word_le            = None
+
+if os.path.exists("model/word_model.tflite") and os.path.exists("model/word_label_encoder.pkl"):
+    try:
+        word_interpreter = tf.lite.Interpreter(model_path="model/word_model.tflite")
+        word_interpreter.allocate_tensors()
+        word_input_details  = word_interpreter.get_input_details()
+        word_output_details = word_interpreter.get_output_details()
+        with open("model/word_label_encoder.pkl", "rb") as f:
+            word_le = pickle.load(f)
+        WORD_MODEL_AVAILABLE = True
+        print(f"  ✅  Word model loaded — {len(word_le.classes_)} classes: {list(word_le.classes_)}")
+    except Exception as e:
+        print(f"  ⚠️  Word model failed to load: {e}")
+else:
+    print("  ℹ️  Word model not found — running letter-only mode.")
+    print("      Train it with: python train_lstm_model.py")
+
 def tflite_predict(landmarks_array):
-    """Run single inference with TFLite. Thread-safe."""
+    """Run single-frame letter inference. Thread-safe (single interpreter)."""
     inp = landmarks_array.astype(np.float32)
     interpreter.set_tensor(input_details[0]['index'], inp)
     interpreter.invoke()
-    output = interpreter.get_tensor(output_details[0]['index'])
-    return output  # shape (1, num_classes)
+    return interpreter.get_tensor(output_details[0]['index'])  # (1, num_letter_classes)
+
+def word_tflite_predict(sequence_array):
+    """Run 30-frame word inference. Returns (label, confidence) or (None, 0)."""
+    if not WORD_MODEL_AVAILABLE:
+        return None, 0.0
+    inp = sequence_array.astype(np.float32)          # (1, 30, 42)
+    word_interpreter.set_tensor(word_input_details[0]['index'], inp)
+    word_interpreter.invoke()
+    output = word_interpreter.get_tensor(word_output_details[0]['index'])  # (1, num_words)
+    idx  = int(np.argmax(output))
+    conf = float(output[0][idx])
+    label = word_le.inverse_transform([idx])[0]
+    return label, conf
 
 # ── MediaPipe ─────────────────────────────────────────────────────────────────
 mp_hands = mp.solutions.hands
@@ -60,6 +96,7 @@ state = {
     "sentence":   "",
     "suggestion": "",
     "hold_pct":   0.0,
+    "mode":       "letter",   # "letter" | "word"
 }
 
 # Inference mutable state (only touched by inference_loop thread)
@@ -71,10 +108,14 @@ pred_buffer        = collections.deque(maxlen=15)
 autocorrect_suggestion = ""
 autocorrect_timer  = 0.0
 
-CONFIDENCE_THRESHOLD  = 0.72
-HOLD_TIME_LETTER      = 0.7
-HOLD_TIME_WORD        = 1.0
-NO_HAND_SPACE_FRAMES  = 30
+# Word recognition state
+landmark_buffer    = collections.deque(maxlen=30)  # 30-frame ring buffer
+
+CONFIDENCE_THRESHOLD       = 0.72
+WORD_CONFIDENCE_THRESHOLD  = 0.70   # minimum confidence to prefer word over letter
+HOLD_TIME_LETTER           = 0.7
+HOLD_TIME_WORD             = 1.0
+NO_HAND_SPACE_FRAMES       = 30
 
 # ── Camera ────────────────────────────────────────────────────────────────────
 cap = cv2.VideoCapture(0)
@@ -132,10 +173,25 @@ def inference_loop():
                     landmarks.append(lm.x - wrist_x)
                     landmarks.append(lm.y - wrist_y)
 
-                landmarks = np.array(landmarks, dtype=np.float32).reshape(1, -1)
-                prediction = tflite_predict(landmarks)
-                raw_conf   = float(np.max(prediction))
-                raw_label  = le.inverse_transform([np.argmax(prediction)])[0]
+                # === Mode-gated inference ===
+                with lock:
+                    cur_mode = state["mode"]
+
+                if cur_mode == "word" and WORD_MODEL_AVAILABLE:
+                    # ── Word-only mode ──────────────────────────────────────
+                    landmark_buffer.append(np.array(landmarks, dtype=np.float32))
+                    raw_label, raw_conf = "-", 0.0
+                    if len(landmark_buffer) == 30:
+                        seq = np.array(landmark_buffer, dtype=np.float32).reshape(1, 30, 42)
+                        wl, wc = word_tflite_predict(seq)
+                        if wl is not None:
+                            raw_label, raw_conf = wl, wc
+                else:
+                    # ── Letter-only mode (default) ──────────────────────────
+                    landmarks_flat = np.array(landmarks, dtype=np.float32).reshape(1, -1)
+                    prediction = tflite_predict(landmarks_flat)
+                    raw_conf  = float(np.max(prediction))
+                    raw_label = le.inverse_transform([np.argmax(prediction)])[0]
 
                 # Rolling majority-vote buffer
                 pred_buffer.append(raw_label if raw_conf > CONFIDENCE_THRESHOLD else None)
@@ -147,7 +203,7 @@ def inference_loop():
                     if votes >= buf_len // 3:
                         predicted_label = most_common
                         confidence      = raw_conf
-                        is_word         = predicted_label in WORD_LABELS
+                        is_word         = (cur_mode == "word")
 
             # Hold-timer: commit letter/word after holding the sign
             hold_required = HOLD_TIME_WORD if is_word else HOLD_TIME_LETTER
@@ -177,6 +233,7 @@ def inference_loop():
             no_hand_frames += 1
             current_letter   = ""
             letter_confirmed = False
+            landmark_buffer.clear()  # reset word buffer when hand disappears
 
             if no_hand_frames == NO_HAND_SPACE_FRAMES:
                 with lock:
@@ -216,6 +273,7 @@ def inference_loop():
             state["confidence"] = round(confidence, 3)
             state["is_word"]    = is_word
             state["hold_pct"]   = round(hold_pct, 3)
+            # mode is already in state, no need to update here
 
         # JPEG encode for web streaming
         ret2, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
@@ -275,6 +333,24 @@ def accept_suggestion():
                 state["sentence"] = " ".join(words) + " "
         state["suggestion"] = ""
     return jsonify({"ok": True})
+
+@app.route('/set_mode', methods=['POST'])
+def set_mode():
+    """Switch between 'letter' and 'word' recognition modes."""
+    from flask import request
+    data = request.get_json(force=True)
+    mode = data.get("mode", "letter")
+    if mode not in ("letter", "word"):
+        return jsonify({"ok": False, "error": "mode must be 'letter' or 'word'"}), 400
+    with lock:
+        state["mode"]       = mode
+        state["sentence"]   = ""   # clear sentence on mode switch
+        state["suggestion"] = ""
+    # also reset inference buffers (thread-safe via globals)
+    pred_buffer.clear()
+    landmark_buffer.clear()
+    print(f"  Mode switched -> {mode}")
+    return jsonify({"ok": True, "mode": mode})
 
 if __name__ == '__main__':
     t = threading.Thread(target=inference_loop, daemon=True)
